@@ -6,6 +6,12 @@
     <title>Aussie Wealth Planner</title>
     <!-- Tailwind CSS for styling -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        // This tells Tailwind to look for the 'dark' class on the HTML element
+        tailwind.config = {
+            darkMode: 'class'
+        }
+    </script>
     <!-- Chart.js for data visualization -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- Google Fonts: Inter -->
@@ -16,6 +22,7 @@
         body { font-family: 'Inter', sans-serif; }
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: #f1f1f1; }
+        .dark ::-webkit-scrollbar-track { background: #1f2937; }
         ::-webkit-scrollbar-thumb { background: #888; border-radius: 10px; }
         ::-webkit-scrollbar-thumb:hover { background: #555; }
         input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
@@ -24,51 +31,46 @@
         .percentage-input-container:after { content: '%'; position: absolute; top: 50%; right: 10px; transform: translateY(-50%); color: #9ca3af; }
         /* Accordion styles */
         .accordion-content { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; }
+        /* Tooltip styles */
+        .tooltip { position: relative; display: inline-block; }
+        .tooltip .tooltiptext { visibility: hidden; width: 220px; background-color: #555; color: #fff; text-align: center; border-radius: 6px; padding: 5px 10px; position: absolute; z-index: 1; bottom: 125%; left: 50%; margin-left: -110px; opacity: 0; transition: opacity 0.3s; font-weight: normal; font-size: 12px; }
+        .tooltip:hover .tooltiptext { visibility: visible; opacity: 1; }
     </style>
 </head>
-<body class="bg-gray-100 text-gray-800">
+<body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-300">
 
     <div class="container mx-auto p-4 md:p-8 max-w-7xl">
-        <header class="text-center mb-8">
-            <h1 class="text-4xl md:text-5xl font-bold text-gray-900">Aussie Wealth Planner</h1>
-            <p class="text-lg text-gray-600 mt-2">A comprehensive tool to forecast your financial future.</p>
+        <header class="text-center mb-8 relative">
+            <h1 class="text-4xl md:text-5xl font-bold text-gray-900 dark:text-gray-100">Aussie Wealth Planner</h1>
+            <p class="text-lg text-gray-600 dark:text-gray-400 mt-2">A comprehensive tool to forecast your financial future.</p>
+             <div class="absolute top-0 right-0">
+                <button id="theme-toggle" type="button" class="text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 rounded-lg text-sm p-2.5">
+                    <svg id="theme-toggle-dark-icon" class="hidden w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path></svg>
+                    <svg id="theme-toggle-light-icon" class="hidden w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 5.05A1 1 0 003.636 6.464l.707.707a1 1 0 001.414-1.414l-.707-.707zM3 11a1 1 0 100-2H2a1 1 0 100 2h1zM13.536 14.95l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414z" clip-rule="evenodd"></path></svg>
+                </button>
+            </div>
         </header>
 
         <main class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <div class="lg:col-span-1 bg-white p-6 rounded-2xl shadow-lg">
+            <div class="lg:col-span-1 bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg">
                 <form id="finance-form" class="space-y-1">
-                    
-                    <!-- Accordion Item: Scenarios -->
-                    <div class="accordion-item border-b">
-                        <button type="button" class="accordion-header w-full flex justify-between items-center py-4 text-left font-semibold text-xl">
-                            Scenarios
-                            <svg class="w-5 h-5 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                        </button>
-                        <div class="accordion-content">
-                            <div class="p-4 pt-0 space-y-3">
-                                <div id="scenario-list" class="space-y-2 max-h-40 overflow-y-auto"></div>
-                                <div class="flex items-center gap-2 pt-2 border-t">
-                                    <input type="text" id="scenario-name" placeholder="New Scenario Name" class="block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm">
-                                    <button type="button" id="save-scenario-btn" class="bg-indigo-100 text-indigo-700 font-semibold py-2 px-4 rounded-md hover:bg-indigo-200">Save</button>
-                                </div>
-                                 <p class="text-xs text-gray-500">Select scenarios to compare on the chart. The last selected scenario's data will be shown in the table.</p>
-                            </div>
-                        </div>
-                    </div>
 
                     <!-- Accordion Item: Personal Details -->
-                    <div class="accordion-item border-b">
-                        <button type="button" class="accordion-header w-full flex justify-between items-center py-4 text-left font-semibold text-xl">Personal Details</button>
+                    <div class="accordion-item border-b dark:border-gray-700">
+                        <button type="button" class="accordion-header w-full flex justify-between items-center py-4 text-left font-semibold text-xl dark:text-gray-200">
+                            Personal Details
+                            <svg class="w-5 h-5 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </button>
                         <div class="accordion-content">
                             <div class="p-4 pt-0 space-y-4">
                                 <!-- User Details -->
                                 <div>
-                                    <label for="birthDate" class="block text-sm font-medium text-gray-700">Your Birth Date</label>
-                                    <input type="date" id="birthDate" required class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm">
+                                    <label for="birthDate" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Your Birth Date</label>
+                                    <input type="date" id="birthDate" required class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm dark:text-white">
                                 </div>
                                 <div>
-                                    <label for="gender" class="block text-sm font-medium text-gray-700">Your Gender</label>
-                                    <select id="gender" required class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm">
+                                    <label for="gender" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Your Gender</label>
+                                    <select id="gender" required class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm dark:text-white">
                                         <option value="male">Male</option>
                                         <option value="female">Female</option>
                                     </select>
@@ -78,106 +80,142 @@
                     </div>
                     
                     <!-- Accordion Item: Financials -->
-                     <div class="accordion-item border-b">
-                        <button type="button" class="accordion-header w-full flex justify-between items-center py-4 text-left font-semibold text-xl">Financials</button>
+                     <div class="accordion-item border-b dark:border-gray-700">
+                        <button type="button" class="accordion-header w-full flex justify-between items-center py-4 text-left font-semibold text-xl dark:text-gray-200">
+                            Financials
+                            <svg class="w-5 h-5 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </button>
                         <div class="accordion-content">
                              <div class="p-4 pt-0 space-y-4">
                                 <div>
-                                    <label for="salary" id="salaryLabel" class="block text-sm font-medium">Your Current Annual Salary (gross)</label>
-                                    <input type="text" id="salary" placeholder="$80,000" required class="mt-1 block w-full px-3 py-2 border-gray-300 rounded-md shadow-sm">
+                                    <label for="salary" id="salaryLabel" class="block text-sm font-medium dark:text-gray-300">Your Current Annual Salary (gross)</label>
+                                    <input type="text" id="salary" placeholder="$80,000" required class="mt-1 block w-full px-3 py-2 border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 dark:text-white">
                                 </div>
                                 <div>
-                                    <label for="superBalance" id="superBalanceLabel" class="block text-sm font-medium">Your Current Super Balance</label>
-                                    <input type="text" id="superBalance" placeholder="$50,000" required class="mt-1 block w-full px-3 py-2 border-gray-300 rounded-md shadow-sm">
+                                    <label for="superBalance" id="superBalanceLabel" class="block text-sm font-medium dark:text-gray-300">Your Current Super Balance</label>
+                                    <input type="text" id="superBalance" placeholder="$50,000" required class="mt-1 block w-full px-3 py-2 border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 dark:text-white">
                                 </div>
                                  <div>
-                                    <label for="preTaxSuper" id="preTaxSuperLabel" class="block text-sm font-medium">Your Voluntary Pre-tax Super p.a.</label>
-                                    <input type="text" id="preTaxSuper" placeholder="$0" required class="mt-1 block w-full px-3 py-2 border-gray-300 rounded-md shadow-sm">
+                                    <label for="preTaxSuper" id="preTaxSuperLabel" class="block text-sm font-medium dark:text-gray-300">Your Voluntary Pre-tax Super p.a.</label>
+                                    <input type="text" id="preTaxSuper" placeholder="$0" required class="mt-1 block w-full px-3 py-2 border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 dark:text-white">
                                 </div>
                                  <div>
-                                    <label for="postTaxSuper" id="postTaxSuperLabel" class="block text-sm font-medium">Your Voluntary Post-tax Super p.a.</label>
-                                    <input type="text" id="postTaxSuper" placeholder="$0" required class="mt-1 block w-full px-3 py-2 border-gray-300 rounded-md shadow-sm">
+                                    <label for="postTaxSuper" id="postTaxSuperLabel" class="block text-sm font-medium dark:text-gray-300">Your Voluntary Post-tax Super p.a.</label>
+                                    <input type="text" id="postTaxSuper" placeholder="$0" required class="mt-1 block w-full px-3 py-2 border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 dark:text-white">
                                 </div>
                                 <div>
-                                    <label for="annualExpenses" class="block text-sm font-medium">Annual Living Expenses (ex. loan)</label>
-                                    <input type="text" id="annualExpenses" placeholder="$40,000" required class="mt-1 block w-full px-3 py-2 border-gray-300 rounded-md shadow-sm">
+                                    <label for="annualExpenses" class="block text-sm font-medium dark:text-gray-300">Annual Living Expenses (ex. loan)</label>
+                                    <input type="text" id="annualExpenses" placeholder="$40,000" required class="mt-1 block w-full px-3 py-2 border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 dark:text-white">
                                 </div>
                                 <div>
-                                    <label for="savings" id="savingsLabel" class="block text-sm font-medium">Your Savings & Investments (ex. Super)</label>
-                                    <input type="text" id="savings" placeholder="$25,000" required class="mt-1 block w-full px-3 py-2 border-gray-300 rounded-md shadow-sm">
+                                    <label for="savings" id="savingsLabel" class="block text-sm font-medium dark:text-gray-300">Your Savings & Investments (ex. Super)</label>
+                                    <input type="text" id="savings" placeholder="$25,000" required class="mt-1 block w-full px-3 py-2 border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 dark:text-white">
                                 </div>
                                 <div>
-                                    <label for="assets" id="assetsLabel" class="block text-sm font-medium">Your Other Assets Value (Property, etc.)</label>
-                                    <input type="text" id="assets" placeholder="$300,000" required class="mt-1 block w-full px-3 py-2 border-gray-300 rounded-md shadow-sm">
+                                    <label for="assets" id="assetsLabel" class="block text-sm font-medium dark:text-gray-300">Your Other Assets Value (Property, etc.)</label>
+                                    <input type="text" id="assets" placeholder="$300,000" required class="mt-1 block w-full px-3 py-2 border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 dark:text-white">
                                 </div>
                              </div>
                         </div>
                     </div>
 
                     <!-- Accordion Item: Loan Details -->
-                     <div class="accordion-item border-b">
-                        <button type="button" class="accordion-header w-full flex justify-between items-center py-4 text-left font-semibold text-xl">Major Loan</button>
+                     <div class="accordion-item border-b dark:border-gray-700">
+                        <button type="button" class="accordion-header w-full flex justify-between items-center py-4 text-left font-semibold text-xl dark:text-gray-200">
+                            Major Loan
+                            <svg class="w-5 h-5 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </button>
                         <div class="accordion-content">
                             <div class="p-4 pt-0 space-y-4">
                                 <div>
-                                    <label class="block text-sm font-medium">Initial Loan Amount</label>
-                                    <input type="text" id="loanAmount" value="$0" class="mt-1 block w-full px-3 py-2 border-gray-300 rounded-md shadow-sm">
+                                    <label class="block text-sm font-medium dark:text-gray-300">Initial Loan Amount</label>
+                                    <input type="text" id="loanAmount" value="$0" class="mt-1 block w-full px-3 py-2 border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 dark:text-white">
                                 </div>
                                 <div class="grid grid-cols-2 gap-4">
-                                    <div><label class="block text-sm font-medium">Term (Years)</label><input type="number" id="loanTerm" value="30" class="mt-1 block w-full px-3 py-2 border-gray-300 rounded-md shadow-sm"></div>
-                                    <div class="percentage-input-container"><label class="block text-sm font-medium">Interest Rate</label><input type="number" id="loanInterest" value="5.5" step="0.01" class="mt-1 block w-full px-3 py-2 border-gray-300 rounded-md shadow-sm"></div>
+                                    <div><label class="block text-sm font-medium dark:text-gray-300">Term (Years)</label><input type="number" id="loanTerm" value="30" class="mt-1 block w-full px-3 py-2 border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 dark:text-white"></div>
+                                    <div class="percentage-input-container"><label class="block text-sm font-medium dark:text-gray-300">Interest Rate</label><input type="number" id="loanInterest" value="5.5" step="0.01" class="mt-1 block w-full px-3 py-2 border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 dark:text-white"></div>
                                 </div>
                             </div>
                         </div>
                     </div>
 
                     <!-- Accordion Item: Assumptions -->
-                    <div class="accordion-item border-b">
-                        <button type="button" class="accordion-header w-full flex justify-between items-center py-4 text-left font-semibold text-xl">Assumptions</button>
+                    <div class="accordion-item border-b dark:border-gray-700">
+                        <button type="button" class="accordion-header w-full flex justify-between items-center py-4 text-left font-semibold text-xl dark:text-gray-200">
+                            Assumptions
+                            <svg class="w-5 h-5 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </button>
                         <div class="accordion-content">
                             <div class="p-4 pt-0 space-y-4">
                                 <div>
-                                    <label for="retirementAge" class="block text-sm font-medium">Desired Retirement Age</label>
-                                    <input type="number" id="retirementAge" value="67" required class="mt-1 block w-full px-3 py-2 border-gray-300 rounded-md shadow-sm">
+                                    <label for="retirementAge" class="block text-sm font-medium dark:text-gray-300">Desired Retirement Age</label>
+                                    <input type="number" id="retirementAge" value="67" required class="mt-1 block w-full px-3 py-2 border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 dark:text-white">
                                 </div>
                                 <div>
-                                    <label for="retirementIncome" class="block text-sm font-medium">Desired Annual Retirement Income</label>
-                                    <input type="text" id="retirementIncome" value="$60,000" required class="mt-1 block w-full px-3 py-2 border-gray-300 rounded-md shadow-sm">
+                                    <label for="retirementIncome" class="block text-sm font-medium dark:text-gray-300">Desired Annual Retirement Income</label>
+                                    <input type="text" id="retirementIncome" value="$60,000" required class="mt-1 block w-full px-3 py-2 border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 dark:text-white">
                                 </div>
                                 <!-- Asset Allocation -->
-                                <div class="pt-4 border-t">
-                                    <h3 class="text-md font-semibold text-gray-800">Asset Allocation & Returns</h3>
+                                <div class="pt-4 border-t dark:border-gray-700">
+                                    <h3 class="text-md font-semibold text-gray-800 dark:text-gray-200">Asset Allocation & Returns</h3>
                                     <div class="mt-2 space-y-3">
                                         <div class="grid grid-cols-2 gap-4">
-                                            <div class="percentage-input-container"><label class="block text-sm font-medium">Growth %</label><input type="number" id="growthAllocation" value="70" class="asset-allocation mt-1 block w-full px-3 py-2 border-gray-300 rounded-md shadow-sm"></div>
-                                            <div class="percentage-input-container"><label class="block text-sm font-medium">Return p.a.</label><input type="number" id="growthReturn" value="8" step="0.1" class="mt-1 block w-full px-3 py-2 border-gray-300 rounded-md shadow-sm"></div>
+                                            <div class="percentage-input-container"><label class="block text-sm font-medium dark:text-gray-300">Growth %</label><input type="number" id="growthAllocation" value="70" class="asset-allocation mt-1 block w-full px-3 py-2 border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 dark:text-white"></div>
+                                            <div class="percentage-input-container"><label class="block text-sm font-medium dark:text-gray-300">Return p.a.</label><input type="number" id="growthReturn" value="8" step="0.1" class="mt-1 block w-full px-3 py-2 border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 dark:text-white"></div>
                                         </div>
                                          <div class="grid grid-cols-2 gap-4">
-                                            <div class="percentage-input-container"><label class="block text-sm font-medium">Defensive %</label><input type="number" id="defensiveAllocation" value="30" class="asset-allocation mt-1 block w-full px-3 py-2 border-gray-300 rounded-md shadow-sm"></div>
-                                            <div class="percentage-input-container"><label class="block text-sm font-medium">Return p.a.</label><input type="number" id="defensiveReturn" value="4" step="0.1" class="mt-1 block w-full px-3 py-2 border-gray-300 rounded-md shadow-sm"></div>
+                                            <div class="percentage-input-container"><label class="block text-sm font-medium dark:text-gray-300">Defensive %</label><input type="number" id="defensiveAllocation" value="30" class="asset-allocation mt-1 block w-full px-3 py-2 border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 dark:text-white"></div>
+                                            <div class="percentage-input-container"><label class="block text-sm font-medium dark:text-gray-300">Return p.a.</label><input type="number" id="defensiveReturn" value="4" step="0.1" class="mt-1 block w-full px-3 py-2 border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 dark:text-white"></div>
                                         </div>
                                         <p id="allocationError" class="text-red-500 text-xs hidden">Allocations must sum to 100%</p>
                                     </div>
                                 </div>
                                 <div class="percentage-input-container">
-                                    <label for="salaryGrowth" class="block text-sm font-medium">Expected Annual Salary Growth</label>
-                                    <input type="number" id="salaryGrowth" value="2.5" step="0.1" required class="mt-1 block w-full px-3 py-2 border-gray-300 rounded-md shadow-sm">
+                                    <label for="salaryGrowth" class="block text-sm font-medium dark:text-gray-300">Expected Annual Salary Growth</label>
+                                    <input type="number" id="salaryGrowth" value="2.5" step="0.1" required class="mt-1 block w-full px-3 py-2 border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 dark:text-white">
                                 </div>
                                 <div class="percentage-input-container">
-                                    <label for="inflation" class="block text-sm font-medium">Expected Annual Inflation</label>
-                                    <input type="number" id="inflation" value="2" step="0.1" required class="mt-1 block w-full px-3 py-2 border-gray-300 rounded-md shadow-sm">
+                                    <label for="inflation" class="block text-sm font-medium dark:text-gray-300">Expected Annual Inflation</label>
+                                    <input type="number" id="inflation" value="2" step="0.1" required class="mt-1 block w-full px-3 py-2 border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 dark:text-white">
+                                </div>
+                                <!-- Monte Carlo Simulation Section -->
+                                <div class="pt-4 border-t dark:border-gray-700">
+                                    <h3 class="text-md font-semibold text-gray-800 dark:text-gray-200">Monte Carlo Simulation</h3>
+                                     <div class="flex items-center mt-2">
+                                        <input id="enableMonteCarlo" name="enableMonteCarlo" type="checkbox" class="h-4 w-4 text-indigo-600 rounded">
+                                        <label for="enableMonteCarlo" class="ml-2 block text-sm font-medium">Enable Simulation</label>
+                                    </div>
+                                    <div id="monte-carlo-settings" class="hidden mt-2 space-y-3">
+                                        <div class="grid grid-cols-2 gap-4">
+                                            <div>
+                                                <label class="block text-sm font-medium dark:text-gray-300 tooltip">Simulations
+                                                    <span class="tooltiptext">The number of random scenarios to run. More simulations provide a more accurate range but take longer to process.</span>
+                                                </label>
+                                                <input type="number" id="monteCarloSimulations" value="500" class="mt-1 block w-full px-3 py-2 border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 dark:text-white">
+                                            </div>
+                                            <div class="percentage-input-container">
+                                                <label class="block text-sm font-medium dark:text-gray-300 tooltip">Std. Deviation
+                                                    <span class="tooltiptext">The annual volatility of your returns. Higher values mean wider potential outcomes. 12-15% is typical for growth assets.</span>
+                                                </label>
+                                                <input type="number" id="monteCarloStdDev" value="12" step="0.1" class="mt-1 block w-full px-3 py-2 border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 dark:text-white">
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                     
                     <!-- Accordion Item: Life Events -->
-                    <div class="accordion-item border-b">
-                         <button type="button" class="accordion-header w-full flex justify-between items-center py-4 text-left font-semibold text-xl">Life Events</button>
+                    <div class="accordion-item border-b dark:border-gray-700">
+                         <button type="button" class="accordion-header w-full flex justify-between items-center py-4 text-left font-semibold text-xl dark:text-gray-200">
+                            Life Events
+                            <svg class="w-5 h-5 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </button>
                         <div class="accordion-content">
                             <div class="p-4 pt-0">
                                 <div id="life-events-container" class="space-y-3"></div>
-                                <button type="button" id="add-event-btn" class="mt-2 w-full text-indigo-600 font-semibold py-2 px-4 border-2 border-dashed border-gray-300 rounded-lg hover:bg-indigo-50">
+                                <button type="button" id="add-event-btn" class="mt-2 w-full text-indigo-600 dark:text-indigo-400 font-semibold py-2 px-4 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg hover:bg-indigo-50 dark:hover:bg-gray-700">
                                     + Add Event
                                 </button>
                             </div>
@@ -185,66 +223,100 @@
                     </div>
                     
                     <!-- Accordion Item: Health -->
-                    <div class="accordion-item border-b">
-                        <button type="button" class="accordion-header w-full flex justify-between items-center py-4 text-left font-semibold text-xl">Health & Lifestyle</button>
+                    <div class="accordion-item border-b dark:border-gray-700">
+                        <button type="button" class="accordion-header w-full flex justify-between items-center py-4 text-left font-semibold text-xl dark:text-gray-200">
+                            Health & Lifestyle
+                            <svg class="w-5 h-5 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </button>
                         <div class="accordion-content">
                             <div class="p-4 pt-0 space-y-4">
                                  <div>
-                                    <h3 class="text-md font-semibold text-gray-800">For You</h3>
+                                    <h3 class="text-md font-semibold text-gray-800 dark:text-gray-200">For You</h3>
                                     <div class="space-y-3 mt-2">
-                                        <div><label class="block text-sm font-medium">Smoking Status</label><select id="smoking" class="mt-1 block w-full px-3 py-2 border-gray-300 rounded-md shadow-sm"><option value="never">Non-smoker</option><option value="former">Former</option><option value="current">Current</option></select></div>
-                                        <div><label class="block text-sm font-medium">Weekly Exercise</label><select id="exercise" class="mt-1 block w-full px-3 py-2 border-gray-300 rounded-md shadow-sm"><option value="regular">Regular</option><option value="moderate">Moderate</option><option value="sedentary">Sedentary</option></select></div>
+                                        <div><label class="block text-sm font-medium dark:text-gray-300">Smoking Status</label><select id="smoking" class="mt-1 block w-full px-3 py-2 border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 dark:text-white"><option value="never">Non-smoker</option><option value="former">Former</option><option value="current">Current</option></select></div>
+                                        <div><label class="block text-sm font-medium dark:text-gray-300">Weekly Exercise</label><select id="exercise" class="mt-1 block w-full px-3 py-2 border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 dark:text-white"><option value="regular">Regular</option><option value="moderate">Moderate</option><option value="sedentary">Sedentary</option></select></div>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                     
+                     <!-- Accordion Item: Scenarios -->
+                    <div class="accordion-item border-b dark:border-gray-700">
+                        <button type="button" class="accordion-header w-full flex justify-between items-center py-4 text-left font-semibold text-xl dark:text-gray-200">
+                            Scenarios
+                            <svg class="w-5 h-5 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </button>
+                        <div class="accordion-content">
+                            <div class="p-4 pt-0 space-y-3">
+                                <div id="scenario-list" class="space-y-2 max-h-40 overflow-y-auto"></div>
+                                <div class="flex items-center gap-2 pt-2 border-t dark:border-gray-700">
+                                    <input type="text" id="scenario-name" placeholder="New Scenario Name" class="block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm dark:text-white dark:placeholder-gray-400">
+                                    <button type="button" id="save-scenario-btn" class="bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300 font-semibold py-2 px-4 rounded-md hover:bg-indigo-200 dark:hover:bg-indigo-800">Save</button>
+                                </div>
+                                 <p class="text-xs text-gray-500 dark:text-gray-400">Select scenarios to compare. The last selected scenario's data will be shown in the table.</p>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="pt-4">
-                        <button type="submit" class="w-full bg-indigo-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-indigo-700">
-                            Project Finances
+                        <button type="submit" id="project-finances-btn" class="w-full bg-indigo-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 relative">
+                            <span id="btn-text">Project Finances</span>
+                            <div id="btn-loader" class="hidden absolute inset-0 items-center justify-center">
+                                <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                                <span class="ml-2">Simulating...</span>
+                            </div>
                         </button>
                     </div>
                 </form>
             </div>
 
             <!-- Results Section -->
-            <div class="lg:col-span-2 bg-white p-6 rounded-2xl shadow-lg hidden" id="results-section">
-                <h2 class="text-2xl font-bold mb-4 border-b pb-4">Financial Projection</h2>
+            <div class="lg:col-span-2 bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg hidden" id="results-section">
+                <h2 class="text-2xl font-bold mb-4 border-b dark:border-gray-700 pb-4 dark:text-gray-200">Financial Projection</h2>
                 <div id="summary-section">
+                     <p id="median-note" class="text-xs text-center text-gray-500 dark:text-gray-400 mb-4 hidden">(Showing median result of simulations)</p>
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                        <div class="bg-gray-50 p-4 rounded-lg text-center"><h3 class="text-sm font-medium text-gray-500">Current Age</h3><p class="text-2xl font-bold text-indigo-600" id="current-age"></p></div>
-                        <div class="bg-gray-50 p-4 rounded-lg text-center"><h3 class="text-sm font-medium text-gray-500">Life Expectancy</h3><p class="text-2xl font-bold text-indigo-600" id="life-expectancy"></p></div>
-                        <div class="bg-gray-50 p-4 rounded-lg text-center"><h3 class="text-sm font-medium text-gray-500">Retirement Net Worth</h3><p class="text-2xl font-bold text-indigo-600" id="retirement-net-worth"></p></div>
-                        <div class="bg-gray-50 p-4 rounded-lg text-center"><h3 class="text-sm font-medium text-gray-500">Retirement Super</h3><p class="text-2xl font-bold text-indigo-600" id="retirement-super"></p></div>
+                        <div class="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg text-center"><h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Current Age</h3><p class="text-2xl font-bold text-indigo-600 dark:text-indigo-400" id="current-age"></p></div>
+                        <div class="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg text-center"><h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Life Expectancy</h3><p class="text-2xl font-bold text-indigo-600 dark:text-indigo-400" id="life-expectancy"></p></div>
+                        <div class="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg text-center"><h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Retirement Net Worth</h3><p class="text-2xl font-bold text-indigo-600 dark:text-indigo-400" id="retirement-net-worth"></p></div>
+                        <div class="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg text-center"><h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Retirement Super</h3><p class="text-2xl font-bold text-indigo-600 dark:text-indigo-400" id="retirement-super"></p></div>
                     </div>
                      <!-- Key Insights Section -->
-                    <div id="insights-section" class="mb-6 p-4 bg-indigo-50 border border-indigo-200 rounded-lg space-y-2"></div>
+                    <div id="insights-section" class="mb-6 p-4 bg-indigo-50 dark:bg-gray-900/50 border border-indigo-200 dark:border-indigo-500/30 rounded-lg space-y-2"></div>
                 </div>
                 <div class="mb-6 h-96"><canvas id="projectionChart"></canvas></div>
                 <div>
-                    <h3 class="text-xl font-bold mb-4">Year-by-Year Breakdown</h3>
-                    <div class="h-96 overflow-y-auto border rounded-lg">
-                        <table class="min-w-full divide-y divide-gray-200">
-                            <thead class="bg-gray-50 sticky top-0"><tr><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Age</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Year</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Income/Drawdown</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Net Worth (ex. Super)</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Super Balance</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Loan Balance</th></tr></thead>
-                            <tbody id="projection-table" class="bg-white divide-y divide-gray-200"></tbody>
+                    <h3 class="text-xl font-bold mb-4 dark:text-gray-200">Year-by-Year Breakdown</h3>
+                    <div class="h-96 overflow-y-auto border dark:border-gray-700 rounded-lg">
+                        <table class="min-w-full divide-y dark:divide-gray-700">
+                            <thead class="bg-gray-50 dark:bg-gray-700 sticky top-0"><tr><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Age</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Year</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Income/Drawdown</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Net Worth (ex. Super)</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Super Balance</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Loan Balance</th></tr></thead>
+                            <tbody id="projection-table" class="bg-white dark:bg-gray-800 divide-y dark:divide-gray-700"></tbody>
                         </table>
                     </div>
                 </div>
-                <div class="mt-6 text-sm text-gray-500"><p><strong>Disclaimer:</strong> This is a projection model and not financial advice.</p></div>
+                <div class="mt-6 text-sm text-gray-500 dark:text-gray-400"><p><strong>Disclaimer:</strong> This is a projection model and not financial advice.</p></div>
             </div>
 
-            <div class="lg:col-span-2 bg-white p-6 rounded-2xl shadow-lg flex flex-col items-center justify-center text-center" id="placeholder-section">
-                <svg class="w-24 h-24 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
-                <h2 class="text-2xl font-bold">Your Financial Future Awaits</h2>
-                <p class="text-gray-500 mt-2">Load a scenario or fill in your details to begin.</p>
+            <div class="lg:col-span-2 bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg flex flex-col items-center justify-center text-center" id="placeholder-section">
+                <svg class="w-24 h-24 text-gray-300 dark:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                <h2 class="text-2xl font-bold dark:text-gray-200">Your Financial Future Awaits</h2>
+                <p class="text-gray-500 dark:text-gray-400 mt-2">Load a scenario or fill in your details to begin.</p>
             </div>
         </main>
+
+        <footer class="text-center mt-8 text-sm text-gray-500 dark:text-gray-400">
+            <p>Built by <a href="https://github.com/datapush3r" target="_blank" rel="noopener noreferrer" class="text-indigo-600 hover:underline dark:text-indigo-400">Tim Norris</a></p>
+        </footer>
+
     </div>
 
     <script>
     document.addEventListener('DOMContentLoaded', () => {
         // --- ELEMENT SELECTORS ---
+        const themeToggleBtn = document.getElementById('theme-toggle');
+        const themeToggleDarkIcon = document.getElementById('theme-toggle-dark-icon');
+        const themeToggleLightIcon = document.getElementById('theme-toggle-light-icon');
         const form = document.getElementById('finance-form');
         const resultsSection = document.getElementById('results-section');
         const placeholderSection = document.getElementById('placeholder-section');
@@ -253,6 +325,11 @@
         const scenarioListDiv = document.getElementById('scenario-list');
         const saveScenarioBtn = document.getElementById('save-scenario-btn');
         const scenarioNameInput = document.getElementById('scenario-name');
+        const enableMonteCarloCheckbox = document.getElementById('enableMonteCarlo');
+        const monteCarloSettingsDiv = document.getElementById('monte-carlo-settings');
+        const projectFinancesBtn = document.getElementById('project-finances-btn');
+        const btnText = document.getElementById('btn-text');
+        const btnLoader = document.getElementById('btn-loader');
         
         let projectionChart = null;
         let eventCounter = 0;
@@ -262,10 +339,30 @@
             'salary', 'superBalance', 'preTaxSuper', 'postTaxSuper', 'annualExpenses', 'savings', 'assets',
             'loanAmount', 'loanTerm', 'loanInterest',
             'retirementAge', 'retirementIncome', 'growthAllocation', 'growthReturn', 'defensiveAllocation', 'defensiveReturn', 
-            'salaryGrowth', 'inflation',
+            'salaryGrowth', 'inflation', 'enableMonteCarlo', 'monteCarloSimulations', 'monteCarloStdDev',
             'smoking', 'exercise'
         ];
         const CURRENCY_FIELDS = ['salary', 'superBalance', 'preTaxSuper', 'postTaxSuper', 'annualExpenses', 'savings', 'assets', 'loanAmount', 'retirementIncome'];
+
+        // --- THEME SWITCHER LOGIC ---
+        if (localStorage.getItem('color-theme') === 'dark' || (!('color-theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+            themeToggleLightIcon.classList.remove('hidden');
+        } else {
+            document.documentElement.classList.remove('dark');
+            themeToggleDarkIcon.classList.remove('hidden');
+        }
+
+        themeToggleBtn.addEventListener('click', function() {
+            themeToggleDarkIcon.classList.toggle('hidden');
+            themeToggleLightIcon.classList.toggle('hidden');
+            const isDark = document.documentElement.classList.toggle('dark');
+            localStorage.setItem('color-theme', isDark ? 'dark' : 'light');
+            if (projectionChart) {
+                projectionChart.options = getChartOptions();
+                projectionChart.update();
+            }
+        });
 
         // --- HELPER FUNCTIONS ---
         const calculateAge = (dob) => {
@@ -290,6 +387,8 @@
                 const content = header.nextElementSibling;
                 const icon = header.querySelector('svg');
                 header.closest('.accordion-item').classList.toggle('bg-gray-50');
+                header.closest('.accordion-item').classList.toggle('dark:bg-gray-700/50');
+
                 if (content.style.maxHeight) {
                     content.style.maxHeight = null;
                     if(icon) icon.style.transform = 'rotate(0deg)';
@@ -302,9 +401,7 @@
 
         // --- SCENARIO MANAGEMENT ---
         const SCENARIO_LIST_KEY = 'AussieWealthPlanner_Scenarios';
-
         function getScenarios() { return JSON.parse(localStorage.getItem(SCENARIO_LIST_KEY)) || []; }
-        
         function populateScenarios() {
             const scenarios = getScenarios();
             scenarioListDiv.innerHTML = '';
@@ -317,14 +414,13 @@
                         <label for="scenario-cb-${name}" class="ml-2 text-sm">${name}</label>
                     </div>
                     <div>
-                        <button type="button" data-name="${name}" class="load-btn text-xs bg-gray-100 px-2 py-1 rounded hover:bg-gray-200">Load</button>
-                        <button type="button" data-name="${name}" class="delete-btn text-xs text-red-500 px-2 py-1 rounded hover:bg-red-100">Del</button>
+                        <button type="button" data-name="${name}" class="load-btn text-xs bg-gray-100 dark:bg-gray-600 px-2 py-1 rounded hover:bg-gray-200 dark:hover:bg-gray-500">Load</button>
+                        <button type="button" data-name="${name}" class="delete-btn text-xs text-red-500 px-2 py-1 rounded hover:bg-red-100 dark:hover:bg-red-900/50">Del</button>
                     </div>`;
                 scenarioListDiv.appendChild(div);
             });
             scenarioListDiv.addEventListener('click', handleScenarioActions);
         }
-
         function handleScenarioActions(e) {
             const name = e.target.dataset.name;
             if (!name) return;
@@ -338,6 +434,8 @@
                     if(el) el.type === 'checkbox' ? el.checked = scenarioData.inputs[id] : el.value = scenarioData.inputs[id];
                 });
                 
+                enableMonteCarloCheckbox.dispatchEvent(new Event('change'));
+
                 lifeEventsContainer.innerHTML = '';
                 eventCounter = 0;
                 (scenarioData.lifeEvents || []).forEach(event => {
@@ -346,6 +444,8 @@
                     if(newEventDiv) {
                         newEventDiv.querySelector('.event-age').value = event.age;
                         newEventDiv.querySelector('.event-amount').value = event.amount;
+                        // Manually trigger formatting for loaded event amounts
+                        formatCurrency(newEventDiv.querySelector('.event-amount'), true);
                     }
                 });
                 
@@ -359,7 +459,6 @@
                 populateScenarios();
             }
         }
-
         saveScenarioBtn.addEventListener('click', () => {
             const name = scenarioNameInput.value.trim();
             if (!name) { alert('Please enter a scenario name.'); return; }
@@ -384,13 +483,16 @@
         });
 
         // --- UI TOGGLES, FORMATTING, EVENT LISTENERS ---
-        
+        enableMonteCarloCheckbox.addEventListener('change', () => {
+            monteCarloSettingsDiv.classList.toggle('hidden', !enableMonteCarloCheckbox.checked);
+        });
+
         addEventBtn.addEventListener('click', () => {
             eventCounter++;
             const eventHtml = `
-                <div id="event-${eventCounter}" class="grid grid-cols-1 md:grid-cols-3 gap-2 p-2 border rounded-md">
-                    <input type="number" placeholder="Age" class="event-age col-span-1 border-gray-300 rounded-md shadow-sm" required>
-                    <input type="text" placeholder="Amount (e.g., -50000)" class="event-amount col-span-1 border-gray-300 rounded-md shadow-sm" required>
+                <div id="event-${eventCounter}" class="grid grid-cols-1 md:grid-cols-3 gap-2 p-2 border dark:border-gray-600 rounded-md">
+                    <input type="number" placeholder="Age" class="event-age col-span-1 border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 dark:text-white" required>
+                    <input type="text" placeholder="Amount (e.g., -50000)" class="event-amount col-span-1 border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 dark:text-white" required>
                     <button type="button" onclick="document.getElementById('event-${eventCounter}').remove()" class="text-red-500 hover:text-red-700 justify-self-end">Remove</button>
                 </div>`;
             lifeEventsContainer.insertAdjacentHTML('beforeend', eventHtml);
@@ -401,9 +503,8 @@
                 newAmountField.value = rawValue === '0' ? '' : rawValue;
             });
         });
-
         const formatCurrency = (input, allowNegative = false) => {
-             if(!input) return;
+            if(!input) return;
              let regex = allowNegative ? /[^0-9-]/g : /[^0-9]/g;
              let value = String(input.value).replace(regex, '');
              if (value === '' || value === '-') { input.value = ''; return; }
@@ -411,14 +512,13 @@
         };
         const unformatCurrency = (value) => parseFloat(String(value).replace(/[^0-9.-]+/g,"")) || 0;
         CURRENCY_FIELDS.forEach(id => {
-             const input = document.getElementById(id);
+            const input = document.getElementById(id);
              if(input) {
                  input.addEventListener('blur', () => formatCurrency(input));
                  input.addEventListener('focus', () => { input.value = unformatCurrency(input.value) || ''; });
              }
         });
-        
-         const calculateNetIncome = (grossIncome) => {
+        const calculateNetIncome = (grossIncome) => {
             const medicareLevy = grossIncome * 0.02;
             let tax = 0;
             if (grossIncome > 180000) tax = 51667 + (grossIncome - 180000) * 0.45;
@@ -428,10 +528,41 @@
             return grossIncome - tax - medicareLevy;
         };
 
-        // --- MAIN PROJECTION LOGIC ---
-        function runProjection(scenarioInputs, scenarioLifeEvents) {
-            const { inputs, lifeEvents } = { inputs: scenarioInputs, lifeEvents: scenarioLifeEvents };
+        function getChartOptions() {
+            const isDarkMode = document.documentElement.classList.contains('dark');
+            const gridColor = isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
+            const textColor = isDarkMode ? '#d1d5db' : '#4b5563';
+            return { 
+                responsive: true, maintainAspectRatio: false, 
+                scales: { 
+                    y: { beginAtZero: true, ticks: { callback: value => '$' + value.toLocaleString(), color: textColor }, grid: { color: gridColor } }, 
+                    x: { title: { display: true, text: 'Age', color: textColor }, ticks: { color: textColor }, grid: { color: gridColor } } 
+                },
+                plugins: { 
+                    legend: { labels: { color: textColor, filter: (legendItem, chartData) => !legendItem.text.includes('_hidden_') } },
+                    tooltip: { 
+                        titleColor: isDarkMode ? '#ffffff' : '#000000',
+                        bodyColor: isDarkMode ? '#d1d5db' : '#4b5563',
+                        backgroundColor: isDarkMode ? 'rgba(31, 41, 55, 0.8)' : 'rgba(255, 255, 255, 0.8)',
+                        callbacks: { label: context => `${context.dataset.label}: ${new Intl.NumberFormat('en-AU', { style: 'currency', currency: 'AUD' }).format(context.parsed.y)}` } 
+                    } 
+                }
+            };
+        }
 
+        // --- MONTE CARLO & PROJECTION LOGIC ---
+        // Box-Muller transform to get a normally distributed random number
+        function randomNormal() {
+            let u = 0, v = 0;
+            while(u === 0) u = Math.random(); //Converting [0,1) to (0,1)
+            while(v === 0) v = Math.random();
+            return Math.sqrt( -2.0 * Math.log( u ) ) * Math.cos( 2.0 * Math.PI * v );
+        }
+
+        function runSingleProjection(inputs, lifeEvents) {
+            const isMonteCarlo = inputs.enableMonteCarlo;
+            const stdDev = parseFloat(inputs.monteCarloStdDev) / 100;
+            
             const currentAge = calculateAge(inputs.birthDate);
             const estimatedLifeExpectancy = calculateLifeExpectancy(inputs.gender, inputs.smoking, inputs.exercise);
             const projectionEndAge = estimatedLifeExpectancy;
@@ -449,7 +580,7 @@
             const SUPER_CONTRIBUTION_TAX = 0.15;
             const SUPER_EARNINGS_TAX = 0.15;
             
-            const weightedReturn = (parseFloat(inputs.growthAllocation)/100 * parseFloat(inputs.growthReturn)/100) + (parseFloat(inputs.defensiveAllocation)/100 * parseFloat(inputs.defensiveReturn)/100);
+            const averageReturn = (parseFloat(inputs.growthAllocation)/100 * parseFloat(inputs.growthReturn)/100) + (parseFloat(inputs.defensiveAllocation)/100 * parseFloat(inputs.defensiveReturn)/100);
 
             const loanMonthlyRate = (inputs.loanInterest / 100) / 12;
             const loanNumMonths = inputs.loanTerm * 12;
@@ -459,6 +590,8 @@
             const projection = [];
             const today = new Date();
             for (let age = currentAge; age <= projectionEndAge; age++) {
+                const weightedReturn = isMonteCarlo ? averageReturn + randomNormal() * stdDev : averageReturn;
+
                 let incomeOrDrawdown = 0;
                 let interestPaid = 0, principalPaid = 0;
                 if (currentLoanBalance > 0) {
@@ -471,26 +604,25 @@
                 const totalAnnualExpenses = currentLivingExpenses + (interestPaid + principalPaid);
 
                 if (age < retirementAge) {
-                    incomeOrDrawdown = calculateNetIncome(currentGrossSalary);
+                     incomeOrDrawdown = calculateNetIncome(currentGrossSalary);
                     const sgContribution = currentGrossSalary * SUPER_GUARANTEE_RATE;
                     const concessionalContribution = sgContribution + inputs.preTaxSuper;
                     const nonConcessionalContribution = inputs.postTaxSuper;
                     const contributionsTax = concessionalContribution * SUPER_CONTRIBUTION_TAX;
                     const netContributions = concessionalContribution + nonConcessionalContribution - contributionsTax;
-                    const superGrowth = currentSuperBalance * weightedReturn * (1 - SUPER_EARNINGS_TAX);
-                    currentSuperBalance += superGrowth + netContributions;
+                    const superGrowth = currentSuperBalance * weightedReturn;
+                    currentSuperBalance += superGrowth * (1 - SUPER_EARNINGS_TAX) + netContributions;
                     
                     const annualSavings = incomeOrDrawdown - totalAnnualExpenses - inputs.postTaxSuper;
                     const investmentGrowth = currentNetWorth * weightedReturn;
                     const eventAmount = lifeEvents.find(e => e.age === age)?.amount || 0;
                     currentNetWorth += investmentGrowth + annualSavings + eventAmount;
-
                 } else { // Retirement
                     const inflationMultiplier = Math.pow(1 + inflation, age - currentAge);
                     const desiredIncome = inputs.retirementIncome * inflationMultiplier;
                     const superDrawdown = Math.min(currentSuperBalance, desiredIncome);
                     currentSuperBalance -= superDrawdown;
-                    currentSuperBalance *= (1 + weightedReturn); // Growth is tax-free in pension phase
+                    currentSuperBalance *= (1 + weightedReturn); // Growth is tax-free
                     incomeOrDrawdown = superDrawdown;
 
                     const expenseShortfall = Math.max(0, totalAnnualExpenses - superDrawdown);
@@ -499,55 +631,97 @@
                     currentNetWorth += investmentGrowth - expenseShortfall + eventAmount;
                     if(currentNetWorth < 0) currentNetWorth = 0;
                 }
-
-                projection.push({ 
-                    age,
-                    year: today.getFullYear() + (age - currentAge),
-                    incomeOrDrawdown,
-                    netWorth: currentNetWorth,
-                    superBalance: currentSuperBalance,
-                    loanBalance: currentLoanBalance
-                });
-
+                
+                projection.push({ age, year: today.getFullYear() + (age - currentAge), incomeOrDrawdown, netWorth: currentNetWorth, superBalance: currentSuperBalance, loanBalance: currentLoanBalance });
                 currentGrossSalary *= (1 + salaryGrowthRate);
                 currentLivingExpenses *= (1 + inflation);
             }
             return projection;
         }
+        
+        function runMonteCarlo(inputs, lifeEvents) {
+            const numSimulations = parseInt(inputs.monteCarloSimulations);
+            const allSimulations = [];
+            for (let i = 0; i < numSimulations; i++) {
+                allSimulations.push(runSingleProjection(inputs, lifeEvents));
+            }
+            
+            // Process results
+            const resultsByYear = {};
+            allSimulations.forEach(sim => {
+                sim.forEach(yearData => {
+                    if (!resultsByYear[yearData.age]) {
+                        resultsByYear[yearData.age] = { netWorth: [], super: [] };
+                    }
+                    resultsByYear[yearData.age].netWorth.push(yearData.netWorth);
+                    resultsByYear[yearData.age].super.push(yearData.superBalance);
+                });
+            });
+            
+            const percentileResults = { p10: [], p50: [], p90: [] };
+            const medianSim = allSimulations.sort((a,b) => a[a.length-1].netWorth - b[b.length-1].netWorth)[Math.floor(numSimulations/2)];
+
+            for (const age in resultsByYear) {
+                const nw = resultsByYear[age].netWorth.sort((a, b) => a - b);
+                const sup = resultsByYear[age].super.sort((a, b) => a - b);
+                percentileResults.p10.push({ age: parseInt(age), netWorth: nw[Math.floor(nw.length * 0.1)], super: sup[Math.floor(sup.length * 0.1)] });
+                percentileResults.p50.push({ age: parseInt(age), netWorth: nw[Math.floor(nw.length * 0.5)], super: sup[Math.floor(sup.length * 0.5)] });
+                percentileResults.p90.push({ age: parseInt(age), netWorth: nw[Math.floor(nw.length * 0.9)], super: sup[Math.floor(sup.length * 0.9)] });
+            }
+
+            return { percentiles: percentileResults, medianRun: medianSim };
+        }
 
         function generateInsights(projection, retirementAge) {
              const insights = [];
              const loanPaidOffYear = projection.find(p => p.loanBalance <= 0);
-             if (loanPaidOffYear) insights.push(`Your loan is projected to be paid off by age <strong>${loanPaidOffYear.age}</strong>.`);
+             if (loanPaidOffYear) {
+                insights.push(`Your loan is projected to be paid off by age <strong>${loanPaidOffYear.age}</strong>.`);
+             }
 
              const retirementData = projection.find(p => p.age === retirementAge);
              if(retirementData) {
-                if (retirementData.netWorth < 0) insights.push(`<strong class="text-yellow-700">Warning:</strong> You are projected to have a negative net worth at retirement.`);
+                if (retirementData.netWorth < 0) {
+                    insights.push(`<strong class="text-yellow-700 dark:text-yellow-400">Warning:</strong> You are projected to have a negative net worth at retirement.`);
+                }
              }
              
              const superDepletedYear = projection.find(p => p.age > retirementAge && p.superBalance <= 0);
-             if (superDepletedYear) insights.push(`Your superannuation is projected to be depleted by age <strong>${superDepletedYear.age}</strong>.`);
-             else if (retirementData && retirementData.superBalance > 0) insights.push(`Your superannuation is projected to last throughout your retirement.`);
+             if (superDepletedYear) {
+                insights.push(`Your superannuation is projected to be depleted by age <strong>${superDepletedYear.age}</strong>.`);
+             } else if (retirementData && retirementData.superBalance > 0) {
+                insights.push(`Your superannuation is projected to last throughout your retirement.`);
+             }
 
-             document.getElementById('insights-section').innerHTML = insights.map(i => `<p class="text-sm">${i}</p>`).join('');
+             document.getElementById('insights-section').innerHTML = insights.map(i => `<p class="text-sm">${i}</p>`).join('') || '<p class="text-sm">No specific insights to show for this scenario.</p>';
         }
 
         // --- FORM SUBMISSION & CHARTING ---
-        form.addEventListener('submit', function(e) {
+        form.addEventListener('submit', async function(e) {
             e.preventDefault();
+            btnText.classList.add('hidden');
+            btnLoader.classList.add('flex');
+            btnLoader.classList.remove('hidden');
+            projectFinancesBtn.disabled = true;
+
+            await new Promise(resolve => setTimeout(resolve, 50)); 
+            
             const checkedScenarios = Array.from(document.querySelectorAll('.scenario-checkbox:checked')).map(cb => cb.name);
             if (checkedScenarios.length === 0) {
                 alert('Please select at least one scenario to project.');
+                btnText.classList.remove('hidden');
+                btnLoader.classList.add('hidden');
+                projectFinancesBtn.disabled = false;
                 return;
             }
-
+            
             const chartDatasets = [];
-            const colors = ['rgba(79, 70, 229, 1)', 'rgba(34, 197, 94, 1)', 'rgba(217, 70, 239, 1)', 'rgba(245, 158, 11, 1)'];
-            let lastProjection = null;
+            const colors = ['rgba(79, 70, 229, 1)', 'rgba(34, 197, 94, 1)', 'rgba(217, 70, 239, 1)'];
+            let lastProjectionData = null;
             let lastInputs = null;
-
+            
             checkedScenarios.forEach((name, index) => {
-                const scenarioData = JSON.parse(localStorage.getItem(`AWP_Scenario_${name}`));
+                 const scenarioData = JSON.parse(localStorage.getItem(`AWP_Scenario_${name}`));
                 if (!scenarioData) return;
                 
                 const inputs = {};
@@ -556,72 +730,83 @@
                 }
                 const lifeEvents = (scenarioData.lifeEvents || []).map(e => ({ age: parseInt(e.age), amount: unformatCurrency(e.amount) }));
 
-                const projection = runProjection(inputs, lifeEvents);
-                
-                chartDatasets.push({
-                    label: `${name} - Net Worth`, data: projection.map(p => p.netWorth), 
-                    borderColor: colors[index % colors.length], backgroundColor: 'transparent',
-                    borderWidth: 2, tension: 0.3, borderDash: [5, 5]
-                });
-                chartDatasets.push({
-                    label: `${name} - Super`, data: projection.map(p => p.superBalance),
-                    borderColor: colors[index % colors.length], backgroundColor: 'transparent',
-                    borderWidth: 2, tension: 0.3
-                });
+                if (inputs.enableMonteCarlo) {
+                    document.getElementById('median-note').classList.remove('hidden');
+                    const { percentiles, medianRun } = runMonteCarlo(inputs, lifeEvents);
+                    lastProjectionData = medianRun;
+                    const color = colors[index % colors.length];
 
-                lastProjection = projection;
+                    // P10-P90 range for Net Worth
+                    chartDatasets.push({
+                        label: `${name} - Net Worth Range (10-90th percentile)`,
+                        data: percentiles.p90.map(p => p.netWorth),
+                        fill: '+1', // Fill to next dataset
+                        backgroundColor: color.replace('1)', '0.1)'),
+                        borderColor: 'transparent',
+                        pointRadius: 0
+                    });
+                     chartDatasets.push({
+                        label: `_hidden_`, // hide from legend
+                        data: percentiles.p10.map(p => p.netWorth),
+                        borderColor: 'transparent',
+                        pointRadius: 0
+                    });
+                    // Median Net Worth
+                    chartDatasets.push({
+                        label: `${name} - Median Net Worth`,
+                        data: percentiles.p50.map(p => p.netWorth),
+                        borderColor: color,
+                        borderWidth: 2,
+                    });
+
+                } else {
+                     document.getElementById('median-note').classList.add('hidden');
+                    const projection = runSingleProjection(inputs, lifeEvents);
+                    lastProjectionData = projection;
+                     chartDatasets.push({ label: `${name} - Net Worth`, data: projection.map(p => p.netWorth), borderColor: colors[index % colors.length], borderWidth: 2, borderDash: [5, 5] });
+                     chartDatasets.push({ label: `${name} - Super`, data: projection.map(p => p.superBalance), borderColor: colors[index % colors.length], borderWidth: 2 });
+                }
+
                 lastInputs = inputs;
             });
             
-            if (lastProjection) {
-                resultsSection.classList.remove('hidden');
+            if (lastProjectionData) {
+                 resultsSection.classList.remove('hidden');
                 placeholderSection.classList.add('hidden');
                 
                 const currentAge = calculateAge(lastInputs.birthDate);
                 const lifeExpectancy = calculateLifeExpectancy(lastInputs.gender, lastInputs.smoking, lastInputs.exercise);
-                const retirementData = lastProjection.find(p => p.age === parseInt(lastInputs.retirementAge)) || lastProjection[lastProjection.length - 1];
+                const retirementData = lastProjectionData.find(p => p.age === parseInt(lastInputs.retirementAge)) || lastProjectionData[lastProjectionData.length - 1];
 
                 document.getElementById('current-age').textContent = currentAge;
                 document.getElementById('life-expectancy').textContent = lifeExpectancy;
                 document.getElementById('retirement-net-worth').textContent = `$${Math.round(retirementData.netWorth).toLocaleString()}`;
                 document.getElementById('retirement-super').textContent = `$${Math.round(retirementData.superBalance).toLocaleString()}`;
                 
-                generateInsights(lastProjection, parseInt(lastInputs.retirementAge));
-                
+                 generateInsights(lastProjectionData, parseInt(lastInputs.retirementAge));
+                 
                 const tableBody = document.getElementById('projection-table');
-                tableBody.innerHTML = '';
-                 lastProjection.forEach(p => {
-                    const row = `
-                        <tr>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${p.age}</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${p.year}</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">$${Math.round(p.incomeOrDrawdown).toLocaleString()}</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">$${Math.round(p.netWorth).toLocaleString()}</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">$${Math.round(p.superBalance).toLocaleString()}</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">$${Math.round(p.loanBalance).toLocaleString()}</td>
-                        </tr>`;
-                    tableBody.insertAdjacentHTML('beforeend', row);
+                tableBody.innerHTML = ''; // Populate with lastProjectionData
+                 lastProjectionData.forEach(p => {
+                     const row = `<tr class="dark:text-gray-300"><td class="px-6 py-4">${p.age}</td><td class="px-6 py-4">${p.year}</td><td class="px-6 py-4">$${Math.round(p.incomeOrDrawdown).toLocaleString()}</td><td class="px-6 py-4">$${Math.round(p.netWorth).toLocaleString()}</td><td class="px-6 py-4">$${Math.round(p.superBalance).toLocaleString()}</td><td class="px-6 py-4">$${Math.round(p.loanBalance).toLocaleString()}</td></tr>`;
+                     tableBody.insertAdjacentHTML('beforeend', row);
                 });
 
                 if (projectionChart) { projectionChart.destroy(); }
                 projectionChart = new Chart(document.getElementById('projectionChart').getContext('2d'), {
                     type: 'line',
-                    data: { labels: lastProjection.map(p => p.age), datasets: chartDatasets },
-                    options: { 
-                        responsive: true, maintainAspectRatio: false, 
-                        scales: { y: { beginAtZero: true, ticks: { callback: value => '$' + value.toLocaleString() } }, x: { title: { display: true, text: 'Age' } } },
-                        plugins: { tooltip: { callbacks: { label: context => `${context.dataset.label}: ${new Intl.NumberFormat('en-AU', { style: 'currency', currency: 'AUD' }).format(context.parsed.y)}` } } }
-                     }
+                    data: { labels: lastProjectionData.map(p => p.age), datasets: chartDatasets },
+                    options: getChartOptions()
                 });
             }
+            
+            btnText.classList.remove('hidden');
+            btnLoader.classList.add('hidden');
+            projectFinancesBtn.disabled = false;
         });
         
         // --- INITIALIZE ---
         populateScenarios();
-        // Open the first two accordions by default
-        document.querySelectorAll('.accordion-header').forEach((header, index) => {
-            if (index < 2) header.click();
-        });
     });
     </script>
 </body>
