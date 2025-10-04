@@ -267,6 +267,23 @@
         ];
         const CURRENCY_FIELDS = ['salary', 'superBalance', 'preTaxSuper', 'postTaxSuper', 'annualExpenses', 'savings', 'assets', 'loanAmount', 'retirementIncome'];
 
+        // --- HELPER FUNCTIONS ---
+        const calculateAge = (dob) => {
+            if(!dob) return 0;
+            const today = new Date();
+            let age = today.getFullYear() - new Date(dob).getFullYear();
+            const m = today.getMonth() - new Date(dob).getMonth();
+            if (m < 0 || (m === 0 && today.getDate() < new Date(dob).getDate())) { age--; }
+            return age;
+        };
+
+        const calculateLifeExpectancy = (g, sm, ex) => {
+            let base = g === 'male' ? 81.3 : 85.4;
+            if (sm === 'current') base -= 10; else if (sm === 'former') base -= 3;
+            if (ex === 'sedentary') base -= 5; else if (ex === 'regular') base += 3;
+            return Math.round(base);
+        };
+
         // --- ACCORDION LOGIC ---
         document.querySelectorAll('.accordion-header').forEach(header => {
             header.addEventListener('click', () => {
@@ -415,21 +432,6 @@
         function runProjection(scenarioInputs, scenarioLifeEvents) {
             const { inputs, lifeEvents } = { inputs: scenarioInputs, lifeEvents: scenarioLifeEvents };
 
-            const today = new Date();
-            const calculateAge = (dob) => {
-                if(!dob) return 0;
-                let age = today.getFullYear() - new Date(dob).getFullYear();
-                const m = today.getMonth() - new Date(dob).getMonth();
-                if (m < 0 || (m === 0 && today.getDate() < new Date(dob).getDate())) { age--; }
-                return age;
-            };
-            const calculateLifeExpectancy = (g, sm, ex) => {
-                let base = g === 'male' ? 81.3 : 85.4;
-                if (sm === 'current') base -= 10; else if (sm === 'former') base -= 3;
-                if (ex === 'sedentary') base -= 5; else if (ex === 'regular') base += 3;
-                return Math.round(base);
-            };
-
             const currentAge = calculateAge(inputs.birthDate);
             const estimatedLifeExpectancy = calculateLifeExpectancy(inputs.gender, inputs.smoking, inputs.exercise);
             const projectionEndAge = estimatedLifeExpectancy;
@@ -455,6 +457,7 @@
             const annualLoanPayment = monthlyLoanPayment * 12;
 
             const projection = [];
+            const today = new Date();
             for (let age = currentAge; age <= projectionEndAge; age++) {
                 let incomeOrDrawdown = 0;
                 let interestPaid = 0, principalPaid = 0;
@@ -601,7 +604,7 @@
                 });
 
                 if (projectionChart) { projectionChart.destroy(); }
-                projectionChart = new Chart(document.getElementById('projectionChart').getContext('d'), {
+                projectionChart = new Chart(document.getElementById('projectionChart').getContext('2d'), {
                     type: 'line',
                     data: { labels: lastProjection.map(p => p.age), datasets: chartDatasets },
                     options: { 
@@ -619,14 +622,6 @@
         document.querySelectorAll('.accordion-header').forEach((header, index) => {
             if (index < 2) header.click();
         });
-
-        function calculateAge(dob) {
-            if(!dob) return 0;
-            let age = new Date().getFullYear() - new Date(dob).getFullYear();
-            const m = new Date().getMonth() - new Date(dob).getMonth();
-            if (m < 0 || (m === 0 && new Date().getDate() < new Date(dob).getDate())) { age--; }
-            return age;
-        };
     });
     </script>
 </body>
