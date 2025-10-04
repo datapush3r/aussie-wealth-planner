@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aussie Wealth Planner</title>
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js for data visualization -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #888; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #555; }
+        input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+        input[type=number] { -moz-appearance: textfield; }
+        .percentage-input-container { position: relative; }
+        .percentage-input-container:after { content: '%'; position: absolute; top: 50%; right: 10px; transform: translateY(-50%); color: #9ca3af; }
+        /* Accordion styles */
+        .accordion-content { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800">
+
+    <div class="container mx-auto p-4 md:p-8 max-w-7xl">
+        <header class="text-center mb-8">
+            <h1 class="text-4xl md:text-5xl font-bold text-gray-900">Aussie Wealth Planner</h1>
+            <p class="text-lg text-gray-600 mt-2">A comprehensive tool to forecast your financial future.</p>
+        </header>
+
+        <main class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div class="lg:col-span-1 bg-white p-6 rounded-2xl shadow-lg">
+                <form id="finance-form" class="space-y-1">
+                    
+                    <!-- Accordion Item: Scenarios -->
+                    <div class="accordion-item border-b">
+                        <button type="button" class="accordion-header w-full flex justify-between items-center py-4 text-left font-semibold text-xl">
+                            Scenarios
+                            <svg class="w-5 h-5 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </button>
+                        <div class="accordion-content">
+                            <div class="p-4 pt-0 space-y-3">
+                                <div id="scenario-list" class="space-y-2 max-h-40 overflow-y-auto"></div>
+                                <div class="flex items-center gap-2 pt-2 border-t">
+                                    <input type="text" id="scenario-name" placeholder="New Scenario Name" class="block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm">
+                                    <button type="button" id="save-scenario-btn" class="bg-indigo-100 text-indigo-700 font-semibold py-2 px-4 rounded-md hover:bg-indigo-200">Save</button>
+                                </div>
+                                 <p class="text-xs text-gray-500">Select scenarios to compare on the chart. The last selected scenario's data will be shown in the table.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Accordion Item: Personal Details -->
+                    <div class="accordion-item border-b">
+                        <button type="button" class="accordion-header w-full flex justify-between items-center py-4 text-left font-semibold text-xl">Personal Details</button>
+                        <div class="accordion-content">
+                            <div class="p-4 pt-0 space-y-4">
+                                <!-- User Details -->
+                                <div>
+                                    <label for="birthDate" class="block text-sm font-medium text-gray-700">Your Birth Date</label>
+                                    <input type="date" id="birthDate" required class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm">
+                                </div>
+                                <div>
+                                    <label for="gender" class="block text-sm font-medium text-gray-700">Your Gender</label>
+                                    <select id="gender" required class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm">
+                                        <option value="male">Male</option>
+                                        <option value="female">Female</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Accordion Item: Financials -->
+                     <div class="accordion-item border-b">
+                        <button type="button" class="accordion-header w-full flex justify-between items-center py-4 text-left font-semibold text-xl">Financials</button>
+                        <div class="accordion-content">
+                             <div class="p-4 pt-0 space-y-4">
+                                <div>
+                                    <label for="salary" id="salaryLabel" class="block text-sm font-medium">Your Current Annual Salary (gross)</label>
+                                    <input type="text" id="salary" placeholder="$80,000" required class="mt-1 block w-full px-3 py-2 border-gray-300 rounded-md shadow-sm">
+                                </div>
+                                <div>
+                                    <label for="superBalance" id="superBalanceLabel" class="block text-sm font-medium">Your Current Super Balance</label>
+                                    <input type="text" id="superBalance" placeholder="$50,000" required class="mt-1 block w-full px-3 py-2 border-gray-300 rounded-md shadow-sm">
+                                </div>
+                                 <div>
+                                    <label for="preTaxSuper" id="preTaxSuperLabel" class="block text-sm font-medium">Your Voluntary Pre-tax Super p.a.</label>
+                                    <input type="text" id="preTaxSuper" placeholder="$0" required class="mt-1 block w-full px-3 py-2 border-gray-300 rounded-md shadow-sm">
+                                </div>
+                                 <div>
+                                    <label for="postTaxSuper" id="postTaxSuperLabel" class="block text-sm font-medium">Your Voluntary Post-tax Super p.a.</label>
+                                    <input type="text" id="postTaxSuper" placeholder="$0" required class="mt-1 block w-full px-3 py-2 border-gray-300 rounded-md shadow-sm">
+                                </div>
+                                <div>
+                                    <label for="annualExpenses" class="block text-sm font-medium">Annual Living Expenses (ex. loan)</label>
+                                    <input type="text" id="annualExpenses" placeholder="$40,000" required class="mt-1 block w-full px-3 py-2 border-gray-300 rounded-md shadow-sm">
+                                </div>
+                                <div>
+                                    <label for="savings" id="savingsLabel" class="block text-sm font-medium">Your Savings & Investments (ex. Super)</label>
+                                    <input type="text" id="savings" placeholder="$25,000" required class="mt-1 block w-full px-3 py-2 border-gray-300 rounded-md shadow-sm">
+                                </div>
+                                <div>
+                                    <label for="assets" id="assetsLabel" class="block text-sm font-medium">Your Other Assets Value (Property, etc.)</label>
+                                    <input type="text" id="assets" placeholder="$300,000" required class="mt-1 block w-full px-3 py-2 border-gray-300 rounded-md shadow-sm">
+                                </div>
+                             </div>
+                        </div>
+                    </div>
+
+                    <!-- Accordion Item: Loan Details -->
+                     <div class="accordion-item border-b">
+                        <button type="button" class="accordion-header w-full flex justify-between items-center py-4 text-left font-semibold text-xl">Major Loan</button>
+                        <div class="accordion-content">
+                            <div class="p-4 pt-0 space-y-4">
+                                <div>
+                                    <label class="block text-sm font-medium">Initial Loan Amount</label>
+                                    <input type="text" id="loanAmount" value="$0" class="mt-1 block w-full px-3 py-2 border-gray-300 rounded-md shadow-sm">
+                                </div>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div><label class="block text-sm font-medium">Term (Years)</label><input type="number" id="loanTerm" value="30" class="mt-1 block w-full px-3 py-2 border-gray-300 rounded-md shadow-sm"></div>
+                                    <div class="percentage-input-container"><label class="block text-sm font-medium">Interest Rate</label><input type="number" id="loanInterest" value="5.5" step="0.01" class="mt-1 block w-full px-3 py-2 border-gray-300 rounded-md shadow-sm"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Accordion Item: Assumptions -->
+                    <div class="accordion-item border-b">
+                        <button type="button" class="accordion-header w-full flex justify-between items-center py-4 text-left font-semibold text-xl">Assumptions</button>
+                        <div class="accordion-content">
+                            <div class="p-4 pt-0 space-y-4">
+                                <div>
+                                    <label for="retirementAge" class="block text-sm font-medium">Desired Retirement Age</label>
+                                    <input type="number" id="retirementAge" value="67" required class="mt-1 block w-full px-3 py-2 border-gray-300 rounded-md shadow-sm">
+                                </div>
+                                <div>
+                                    <label for="retirementIncome" class="block text-sm font-medium">Desired Annual Retirement Income</label>
+                                    <input type="text" id="retirementIncome" value="$60,000" required class="mt-1 block w-full px-3 py-2 border-gray-300 rounded-md shadow-sm">
+                                </div>
+                                <!-- Asset Allocation -->
+                                <div class="pt-4 border-t">
+                                    <h3 class="text-md font-semibold text-gray-800">Asset Allocation & Returns</h3>
+                                    <div class="mt-2 space-y-3">
+                                        <div class="grid grid-cols-2 gap-4">
+                                            <div class="percentage-input-container"><label class="block text-sm font-medium">Growth %</label><input type="number" id="growthAllocation" value="70" class="asset-allocation mt-1 block w-full px-3 py-2 border-gray-300 rounded-md shadow-sm"></div>
+                                            <div class="percentage-input-container"><label class="block text-sm font-medium">Return p.a.</label><input type="number" id="growthReturn" value="8" step="0.1" class="mt-1 block w-full px-3 py-2 border-gray-300 rounded-md shadow-sm"></div>
+                                        </div>
+                                         <div class="grid grid-cols-2 gap-4">
+                                            <div class="percentage-input-container"><label class="block text-sm font-medium">Defensive %</label><input type="number" id="defensiveAllocation" value="30" class="asset-allocation mt-1 block w-full px-3 py-2 border-gray-300 rounded-md shadow-sm"></div>
+                                            <div class="percentage-input-container"><label class="block text-sm font-medium">Return p.a.</label><input type="number" id="defensiveReturn" value="4" step="0.1" class="mt-1 block w-full px-3 py-2 border-gray-300 rounded-md shadow-sm"></div>
+                                        </div>
+                                        <p id="allocationError" class="text-red-500 text-xs hidden">Allocations must sum to 100%</p>
+                                    </div>
+                                </div>
+                                <div class="percentage-input-container">
+                                    <label for="salaryGrowth" class="block text-sm font-medium">Expected Annual Salary Growth</label>
+                                    <input type="number" id="salaryGrowth" value="2.5" step="0.1" required class="mt-1 block w-full px-3 py-2 border-gray-300 rounded-md shadow-sm">
+                                </div>
+                                <div class="percentage-input-container">
+                                    <label for="inflation" class="block text-sm font-medium">Expected Annual Inflation</label>
+                                    <input type="number" id="inflation" value="2" step="0.1" required class="mt-1 block w-full px-3 py-2 border-gray-300 rounded-md shadow-sm">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Accordion Item: Life Events -->
+                    <div class="accordion-item border-b">
+                         <button type="button" class="accordion-header w-full flex justify-between items-center py-4 text-left font-semibold text-xl">Life Events</button>
+                        <div class="accordion-content">
+                            <div class="p-4 pt-0">
+                                <div id="life-events-container" class="space-y-3"></div>
+                                <button type="button" id="add-event-btn" class="mt-2 w-full text-indigo-600 font-semibold py-2 px-4 border-2 border-dashed border-gray-300 rounded-lg hover:bg-indigo-50">
+                                    + Add Event
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Accordion Item: Health -->
+                    <div class="accordion-item border-b">
+                        <button type="button" class="accordion-header w-full flex justify-between items-center py-4 text-left font-semibold text-xl">Health & Lifestyle</button>
+                        <div class="accordion-content">
+                            <div class="p-4 pt-0 space-y-4">
+                                 <div>
+                                    <h3 class="text-md font-semibold text-gray-800">For You</h3>
+                                    <div class="space-y-3 mt-2">
+                                        <div><label class="block text-sm font-medium">Smoking Status</label><select id="smoking" class="mt-1 block w-full px-3 py-2 border-gray-300 rounded-md shadow-sm"><option value="never">Non-smoker</option><option value="former">Former</option><option value="current">Current</option></select></div>
+                                        <div><label class="block text-sm font-medium">Weekly Exercise</label><select id="exercise" class="mt-1 block w-full px-3 py-2 border-gray-300 rounded-md shadow-sm"><option value="regular">Regular</option><option value="moderate">Moderate</option><option value="sedentary">Sedentary</option></select></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="pt-4">
+                        <button type="submit" class="w-full bg-indigo-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-indigo-700">
+                            Project Finances
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Results Section -->
+            <div class="lg:col-span-2 bg-white p-6 rounded-2xl shadow-lg hidden" id="results-section">
+                <h2 class="text-2xl font-bold mb-4 border-b pb-4">Financial Projection</h2>
+                <div id="summary-section">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                        <div class="bg-gray-50 p-4 rounded-lg text-center"><h3 class="text-sm font-medium text-gray-500">Current Age</h3><p class="text-2xl font-bold text-indigo-600" id="current-age"></p></div>
+                        <div class="bg-gray-50 p-4 rounded-lg text-center"><h3 class="text-sm font-medium text-gray-500">Life Expectancy</h3><p class="text-2xl font-bold text-indigo-600" id="life-expectancy"></p></div>
+                        <div class="bg-gray-50 p-4 rounded-lg text-center"><h3 class="text-sm font-medium text-gray-500">Retirement Net Worth</h3><p class="text-2xl font-bold text-indigo-600" id="retirement-net-worth"></p></div>
+                        <div class="bg-gray-50 p-4 rounded-lg text-center"><h3 class="text-sm font-medium text-gray-500">Retirement Super</h3><p class="text-2xl font-bold text-indigo-600" id="retirement-super"></p></div>
+                    </div>
+                     <!-- Key Insights Section -->
+                    <div id="insights-section" class="mb-6 p-4 bg-indigo-50 border border-indigo-200 rounded-lg space-y-2"></div>
+                </div>
+                <div class="mb-6 h-96"><canvas id="projectionChart"></canvas></div>
+                <div>
+                    <h3 class="text-xl font-bold mb-4">Year-by-Year Breakdown</h3>
+                    <div class="h-96 overflow-y-auto border rounded-lg">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50 sticky top-0"><tr><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Age</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Year</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Income/Drawdown</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Net Worth (ex. Super)</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Super Balance</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Loan Balance</th></tr></thead>
+                            <tbody id="projection-table" class="bg-white divide-y divide-gray-200"></tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="mt-6 text-sm text-gray-500"><p><strong>Disclaimer:</strong> This is a projection model and not financial advice.</p></div>
+            </div>
+
+            <div class="lg:col-span-2 bg-white p-6 rounded-2xl shadow-lg flex flex-col items-center justify-center text-center" id="placeholder-section">
+                <svg class="w-24 h-24 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                <h2 class="text-2xl font-bold">Your Financial Future Awaits</h2>
+                <p class="text-gray-500 mt-2">Load a scenario or fill in your details to begin.</p>
+            </div>
+        </main>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // --- ELEMENT SELECTORS ---
+        const form = document.getElementById('finance-form');
+        const resultsSection = document.getElementById('results-section');
+        const placeholderSection = document.getElementById('placeholder-section');
+        const addEventBtn = document.getElementById('add-event-btn');
+        const lifeEventsContainer = document.getElementById('life-events-container');
+        const scenarioListDiv = document.getElementById('scenario-list');
+        const saveScenarioBtn = document.getElementById('save-scenario-btn');
+        const scenarioNameInput = document.getElementById('scenario-name');
+        
+        let projectionChart = null;
+        let eventCounter = 0;
+        
+        const ALL_INPUT_IDS = [
+            'birthDate', 'gender',
+            'salary', 'superBalance', 'preTaxSuper', 'postTaxSuper', 'annualExpenses', 'savings', 'assets',
+            'loanAmount', 'loanTerm', 'loanInterest',
+            'retirementAge', 'retirementIncome', 'growthAllocation', 'growthReturn', 'defensiveAllocation', 'defensiveReturn', 
+            'salaryGrowth', 'inflation',
+            'smoking', 'exercise'
+        ];
+        const CURRENCY_FIELDS = ['salary', 'superBalance', 'preTaxSuper', 'postTaxSuper', 'annualExpenses', 'savings', 'assets', 'loanAmount', 'retirementIncome'];
+
+        // --- ACCORDION LOGIC ---
+        document.querySelectorAll('.accordion-header').forEach(header => {
+            header.addEventListener('click', () => {
+                const content = header.nextElementSibling;
+                const icon = header.querySelector('svg');
+                header.closest('.accordion-item').classList.toggle('bg-gray-50');
+                if (content.style.maxHeight) {
+                    content.style.maxHeight = null;
+                    if(icon) icon.style.transform = 'rotate(0deg)';
+                } else {
+                    content.style.maxHeight = content.scrollHeight + 'px';
+                     if(icon) icon.style.transform = 'rotate(180deg)';
+                }
+            });
+        });
+
+        // --- SCENARIO MANAGEMENT ---
+        const SCENARIO_LIST_KEY = 'AussieWealthPlanner_Scenarios';
+
+        function getScenarios() { return JSON.parse(localStorage.getItem(SCENARIO_LIST_KEY)) || []; }
+        
+        function populateScenarios() {
+            const scenarios = getScenarios();
+            scenarioListDiv.innerHTML = '';
+            scenarios.forEach(name => {
+                const div = document.createElement('div');
+                div.className = 'flex items-center justify-between';
+                div.innerHTML = `
+                    <div class="flex items-center">
+                        <input type="checkbox" id="scenario-cb-${name}" name="${name}" class="scenario-checkbox h-4 w-4 text-indigo-600 rounded">
+                        <label for="scenario-cb-${name}" class="ml-2 text-sm">${name}</label>
+                    </div>
+                    <div>
+                        <button type="button" data-name="${name}" class="load-btn text-xs bg-gray-100 px-2 py-1 rounded hover:bg-gray-200">Load</button>
+                        <button type="button" data-name="${name}" class="delete-btn text-xs text-red-500 px-2 py-1 rounded hover:bg-red-100">Del</button>
+                    </div>`;
+                scenarioListDiv.appendChild(div);
+            });
+            scenarioListDiv.addEventListener('click', handleScenarioActions);
+        }
+
+        function handleScenarioActions(e) {
+            const name = e.target.dataset.name;
+            if (!name) return;
+
+            if (e.target.classList.contains('load-btn')) {
+                const scenarioData = JSON.parse(localStorage.getItem(`AWP_Scenario_${name}`));
+                if (!scenarioData) return;
+                
+                ALL_INPUT_IDS.forEach(id => {
+                    const el = document.getElementById(id);
+                    if(el) el.type === 'checkbox' ? el.checked = scenarioData.inputs[id] : el.value = scenarioData.inputs[id];
+                });
+                
+                lifeEventsContainer.innerHTML = '';
+                eventCounter = 0;
+                (scenarioData.lifeEvents || []).forEach(event => {
+                    addEventBtn.click();
+                    const newEventDiv = document.getElementById(`event-${eventCounter}`);
+                    if(newEventDiv) {
+                        newEventDiv.querySelector('.event-age').value = event.age;
+                        newEventDiv.querySelector('.event-amount').value = event.amount;
+                    }
+                });
+                
+                CURRENCY_FIELDS.forEach(id => formatCurrency(document.getElementById(id)));
+                scenarioNameInput.value = name;
+            } else if (e.target.classList.contains('delete-btn')) {
+                if (!confirm(`Delete '${name}' scenario?`)) return;
+                let scenarios = getScenarios().filter(s => s !== name);
+                localStorage.setItem(SCENARIO_LIST_KEY, JSON.stringify(scenarios));
+                localStorage.removeItem(`AWP_Scenario_${name}`);
+                populateScenarios();
+            }
+        }
+
+        saveScenarioBtn.addEventListener('click', () => {
+            const name = scenarioNameInput.value.trim();
+            if (!name) { alert('Please enter a scenario name.'); return; }
+            let scenarios = getScenarios();
+            if (!scenarios.includes(name)) {
+                scenarios.push(name);
+                localStorage.setItem(SCENARIO_LIST_KEY, JSON.stringify(scenarios));
+            }
+
+            const scenarioData = { inputs: {}, lifeEvents: [] };
+            ALL_INPUT_IDS.forEach(id => {
+                const el = document.getElementById(id);
+                if(el) scenarioData.inputs[id] = el.type === 'checkbox' ? el.checked : el.value;
+            });
+            scenarioData.lifeEvents = Array.from(document.querySelectorAll('#life-events-container > div')).map(div => ({
+                age: div.querySelector('.event-age').value,
+                amount: div.querySelector('.event-amount').value
+            }));
+            localStorage.setItem(`AWP_Scenario_${name}`, JSON.stringify(scenarioData));
+            populateScenarios();
+            alert(`Scenario '${name}' saved!`);
+        });
+
+        // --- UI TOGGLES, FORMATTING, EVENT LISTENERS ---
+        
+        addEventBtn.addEventListener('click', () => {
+            eventCounter++;
+            const eventHtml = `
+                <div id="event-${eventCounter}" class="grid grid-cols-1 md:grid-cols-3 gap-2 p-2 border rounded-md">
+                    <input type="number" placeholder="Age" class="event-age col-span-1 border-gray-300 rounded-md shadow-sm" required>
+                    <input type="text" placeholder="Amount (e.g., -50000)" class="event-amount col-span-1 border-gray-300 rounded-md shadow-sm" required>
+                    <button type="button" onclick="document.getElementById('event-${eventCounter}').remove()" class="text-red-500 hover:text-red-700 justify-self-end">Remove</button>
+                </div>`;
+            lifeEventsContainer.insertAdjacentHTML('beforeend', eventHtml);
+            const newAmountField = lifeEventsContainer.querySelector(`#event-${eventCounter} .event-amount`);
+            newAmountField.addEventListener('blur', () => formatCurrency(newAmountField, true));
+            newAmountField.addEventListener('focus', () => {
+                let rawValue = newAmountField.value.replace(/[^0-9-]/g, '');
+                newAmountField.value = rawValue === '0' ? '' : rawValue;
+            });
+        });
+
+        const formatCurrency = (input, allowNegative = false) => {
+             if(!input) return;
+             let regex = allowNegative ? /[^0-9-]/g : /[^0-9]/g;
+             let value = String(input.value).replace(regex, '');
+             if (value === '' || value === '-') { input.value = ''; return; }
+             input.value = (parseInt(value, 10) < 0 ? '-' : '') + '$' + Math.abs(parseInt(value, 10)).toLocaleString('en-AU');
+        };
+        const unformatCurrency = (value) => parseFloat(String(value).replace(/[^0-9.-]+/g,"")) || 0;
+        CURRENCY_FIELDS.forEach(id => {
+             const input = document.getElementById(id);
+             if(input) {
+                 input.addEventListener('blur', () => formatCurrency(input));
+                 input.addEventListener('focus', () => { input.value = unformatCurrency(input.value) || ''; });
+             }
+        });
+        
+         const calculateNetIncome = (grossIncome) => {
+            const medicareLevy = grossIncome * 0.02;
+            let tax = 0;
+            if (grossIncome > 180000) tax = 51667 + (grossIncome - 180000) * 0.45;
+            else if (grossIncome > 120000) tax = 29467 + (grossIncome - 120000) * 0.37;
+            else if (grossIncome > 45000) tax = 5092 + (grossIncome - 45000) * 0.325;
+            else if (grossIncome > 18200) tax = (grossIncome - 18200) * 0.19;
+            return grossIncome - tax - medicareLevy;
+        };
+
+        // --- MAIN PROJECTION LOGIC ---
+        function runProjection(scenarioInputs, scenarioLifeEvents) {
+            const { inputs, lifeEvents } = { inputs: scenarioInputs, lifeEvents: scenarioLifeEvents };
+
+            const today = new Date();
+            const calculateAge = (dob) => {
+                if(!dob) return 0;
+                let age = today.getFullYear() - new Date(dob).getFullYear();
+                const m = today.getMonth() - new Date(dob).getMonth();
+                if (m < 0 || (m === 0 && today.getDate() < new Date(dob).getDate())) { age--; }
+                return age;
+            };
+            const calculateLifeExpectancy = (g, sm, ex) => {
+                let base = g === 'male' ? 81.3 : 85.4;
+                if (sm === 'current') base -= 10; else if (sm === 'former') base -= 3;
+                if (ex === 'sedentary') base -= 5; else if (ex === 'regular') base += 3;
+                return Math.round(base);
+            };
+
+            const currentAge = calculateAge(inputs.birthDate);
+            const estimatedLifeExpectancy = calculateLifeExpectancy(inputs.gender, inputs.smoking, inputs.exercise);
+            const projectionEndAge = estimatedLifeExpectancy;
+            
+            let currentNetWorth = inputs.savings + inputs.assets;
+            let currentSuperBalance = inputs.superBalance;
+            let currentLivingExpenses = inputs.annualExpenses;
+            let currentGrossSalary = inputs.salary;
+            let currentLoanBalance = inputs.loanAmount;
+
+            const retirementAge = parseInt(inputs.retirementAge);
+            const salaryGrowthRate = parseFloat(inputs.salaryGrowth) / 100;
+            const inflation = parseFloat(inputs.inflation) / 100;
+            const SUPER_GUARANTEE_RATE = 0.115;
+            const SUPER_CONTRIBUTION_TAX = 0.15;
+            const SUPER_EARNINGS_TAX = 0.15;
+            
+            const weightedReturn = (parseFloat(inputs.growthAllocation)/100 * parseFloat(inputs.growthReturn)/100) + (parseFloat(inputs.defensiveAllocation)/100 * parseFloat(inputs.defensiveReturn)/100);
+
+            const loanMonthlyRate = (inputs.loanInterest / 100) / 12;
+            const loanNumMonths = inputs.loanTerm * 12;
+            const monthlyLoanPayment = loanMonthlyRate > 0 && loanNumMonths > 0 ? (currentLoanBalance * loanMonthlyRate * Math.pow(1 + loanMonthlyRate, loanNumMonths)) / (Math.pow(1 + loanMonthlyRate, loanNumMonths) - 1) : 0;
+            const annualLoanPayment = monthlyLoanPayment * 12;
+
+            const projection = [];
+            for (let age = currentAge; age <= projectionEndAge; age++) {
+                let incomeOrDrawdown = 0;
+                let interestPaid = 0, principalPaid = 0;
+                if (currentLoanBalance > 0) {
+                    interestPaid = currentLoanBalance * (inputs.loanInterest / 100);
+                    principalPaid = Math.min(currentLoanBalance, annualLoanPayment - interestPaid);
+                    if( (principalPaid + interestPaid) > annualLoanPayment * 1.01) principalPaid = annualLoanPayment - interestPaid;
+                    currentLoanBalance -= principalPaid;
+                    if(currentLoanBalance < 0) currentLoanBalance = 0;
+                }
+                const totalAnnualExpenses = currentLivingExpenses + (interestPaid + principalPaid);
+
+                if (age < retirementAge) {
+                    incomeOrDrawdown = calculateNetIncome(currentGrossSalary);
+                    const sgContribution = currentGrossSalary * SUPER_GUARANTEE_RATE;
+                    const concessionalContribution = sgContribution + inputs.preTaxSuper;
+                    const nonConcessionalContribution = inputs.postTaxSuper;
+                    const contributionsTax = concessionalContribution * SUPER_CONTRIBUTION_TAX;
+                    const netContributions = concessionalContribution + nonConcessionalContribution - contributionsTax;
+                    const superGrowth = currentSuperBalance * weightedReturn * (1 - SUPER_EARNINGS_TAX);
+                    currentSuperBalance += superGrowth + netContributions;
+                    
+                    const annualSavings = incomeOrDrawdown - totalAnnualExpenses - inputs.postTaxSuper;
+                    const investmentGrowth = currentNetWorth * weightedReturn;
+                    const eventAmount = lifeEvents.find(e => e.age === age)?.amount || 0;
+                    currentNetWorth += investmentGrowth + annualSavings + eventAmount;
+
+                } else { // Retirement
+                    const inflationMultiplier = Math.pow(1 + inflation, age - currentAge);
+                    const desiredIncome = inputs.retirementIncome * inflationMultiplier;
+                    const superDrawdown = Math.min(currentSuperBalance, desiredIncome);
+                    currentSuperBalance -= superDrawdown;
+                    currentSuperBalance *= (1 + weightedReturn); // Growth is tax-free in pension phase
+                    incomeOrDrawdown = superDrawdown;
+
+                    const expenseShortfall = Math.max(0, totalAnnualExpenses - superDrawdown);
+                    const investmentGrowth = currentNetWorth * weightedReturn;
+                    const eventAmount = lifeEvents.find(e => e.age === age)?.amount || 0;
+                    currentNetWorth += investmentGrowth - expenseShortfall + eventAmount;
+                    if(currentNetWorth < 0) currentNetWorth = 0;
+                }
+
+                projection.push({ 
+                    age,
+                    year: today.getFullYear() + (age - currentAge),
+                    incomeOrDrawdown,
+                    netWorth: currentNetWorth,
+                    superBalance: currentSuperBalance,
+                    loanBalance: currentLoanBalance
+                });
+
+                currentGrossSalary *= (1 + salaryGrowthRate);
+                currentLivingExpenses *= (1 + inflation);
+            }
+            return projection;
+        }
+
+        function generateInsights(projection, retirementAge) {
+             const insights = [];
+             const loanPaidOffYear = projection.find(p => p.loanBalance <= 0);
+             if (loanPaidOffYear) insights.push(`Your loan is projected to be paid off by age <strong>${loanPaidOffYear.age}</strong>.`);
+
+             const retirementData = projection.find(p => p.age === retirementAge);
+             if(retirementData) {
+                if (retirementData.netWorth < 0) insights.push(`<strong class="text-yellow-700">Warning:</strong> You are projected to have a negative net worth at retirement.`);
+             }
+             
+             const superDepletedYear = projection.find(p => p.age > retirementAge && p.superBalance <= 0);
+             if (superDepletedYear) insights.push(`Your superannuation is projected to be depleted by age <strong>${superDepletedYear.age}</strong>.`);
+             else if (retirementData && retirementData.superBalance > 0) insights.push(`Your superannuation is projected to last throughout your retirement.`);
+
+             document.getElementById('insights-section').innerHTML = insights.map(i => `<p class="text-sm">${i}</p>`).join('');
+        }
+
+        // --- FORM SUBMISSION & CHARTING ---
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const checkedScenarios = Array.from(document.querySelectorAll('.scenario-checkbox:checked')).map(cb => cb.name);
+            if (checkedScenarios.length === 0) {
+                alert('Please select at least one scenario to project.');
+                return;
+            }
+
+            const chartDatasets = [];
+            const colors = ['rgba(79, 70, 229, 1)', 'rgba(34, 197, 94, 1)', 'rgba(217, 70, 239, 1)', 'rgba(245, 158, 11, 1)'];
+            let lastProjection = null;
+            let lastInputs = null;
+
+            checkedScenarios.forEach((name, index) => {
+                const scenarioData = JSON.parse(localStorage.getItem(`AWP_Scenario_${name}`));
+                if (!scenarioData) return;
+                
+                const inputs = {};
+                for (const key in scenarioData.inputs) {
+                    inputs[key] = CURRENCY_FIELDS.includes(key) ? unformatCurrency(scenarioData.inputs[key]) : scenarioData.inputs[key];
+                }
+                const lifeEvents = (scenarioData.lifeEvents || []).map(e => ({ age: parseInt(e.age), amount: unformatCurrency(e.amount) }));
+
+                const projection = runProjection(inputs, lifeEvents);
+                
+                chartDatasets.push({
+                    label: `${name} - Net Worth`, data: projection.map(p => p.netWorth), 
+                    borderColor: colors[index % colors.length], backgroundColor: 'transparent',
+                    borderWidth: 2, tension: 0.3, borderDash: [5, 5]
+                });
+                chartDatasets.push({
+                    label: `${name} - Super`, data: projection.map(p => p.superBalance),
+                    borderColor: colors[index % colors.length], backgroundColor: 'transparent',
+                    borderWidth: 2, tension: 0.3
+                });
+
+                lastProjection = projection;
+                lastInputs = inputs;
+            });
+            
+            if (lastProjection) {
+                resultsSection.classList.remove('hidden');
+                placeholderSection.classList.add('hidden');
+                
+                const currentAge = calculateAge(lastInputs.birthDate);
+                const lifeExpectancy = calculateLifeExpectancy(lastInputs.gender, lastInputs.smoking, lastInputs.exercise);
+                const retirementData = lastProjection.find(p => p.age === parseInt(lastInputs.retirementAge)) || lastProjection[lastProjection.length - 1];
+
+                document.getElementById('current-age').textContent = currentAge;
+                document.getElementById('life-expectancy').textContent = lifeExpectancy;
+                document.getElementById('retirement-net-worth').textContent = `$${Math.round(retirementData.netWorth).toLocaleString()}`;
+                document.getElementById('retirement-super').textContent = `$${Math.round(retirementData.superBalance).toLocaleString()}`;
+                
+                generateInsights(lastProjection, parseInt(lastInputs.retirementAge));
+                
+                const tableBody = document.getElementById('projection-table');
+                tableBody.innerHTML = '';
+                 lastProjection.forEach(p => {
+                    const row = `
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${p.age}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${p.year}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">$${Math.round(p.incomeOrDrawdown).toLocaleString()}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">$${Math.round(p.netWorth).toLocaleString()}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">$${Math.round(p.superBalance).toLocaleString()}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">$${Math.round(p.loanBalance).toLocaleString()}</td>
+                        </tr>`;
+                    tableBody.insertAdjacentHTML('beforeend', row);
+                });
+
+                if (projectionChart) { projectionChart.destroy(); }
+                projectionChart = new Chart(document.getElementById('projectionChart').getContext('d'), {
+                    type: 'line',
+                    data: { labels: lastProjection.map(p => p.age), datasets: chartDatasets },
+                    options: { 
+                        responsive: true, maintainAspectRatio: false, 
+                        scales: { y: { beginAtZero: true, ticks: { callback: value => '$' + value.toLocaleString() } }, x: { title: { display: true, text: 'Age' } } },
+                        plugins: { tooltip: { callbacks: { label: context => `${context.dataset.label}: ${new Intl.NumberFormat('en-AU', { style: 'currency', currency: 'AUD' }).format(context.parsed.y)}` } } }
+                     }
+                });
+            }
+        });
+        
+        // --- INITIALIZE ---
+        populateScenarios();
+        // Open the first two accordions by default
+        document.querySelectorAll('.accordion-header').forEach((header, index) => {
+            if (index < 2) header.click();
+        });
+
+        function calculateAge(dob) {
+            if(!dob) return 0;
+            let age = new Date().getFullYear() - new Date(dob).getFullYear();
+            const m = new Date().getMonth() - new Date(dob).getMonth();
+            if (m < 0 || (m === 0 && new Date().getDate() < new Date(dob).getDate())) { age--; }
+            return age;
+        };
+    });
+    </script>
+</body>
+</html>
+
